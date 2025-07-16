@@ -488,13 +488,13 @@ void init_esc_pins(void)
     HPM_IOC->PAD[IOC_PAD_PA31].FUNC_CTL = IOC_PA31_FUNC_CTL_ESC0_MDC;
 
     /* ESC needs to configure these pins for specific functions, see ESC IOCFG registers */
-    HPM_IOC->PAD[IOC_PAD_PB24].FUNC_CTL = IOC_PB24_FUNC_CTL_GPIO_B_24;  /* GPIO to reset PHY */
-    HPM_IOC->PAD[IOC_PAD_PC20].FUNC_CTL = IOC_PC20_FUNC_CTL_ESC0_CTR_2; /* NMII_LINK0 function */
-    HPM_IOC->PAD[IOC_PAD_PC20].PAD_CTL = IOC_PAD_PAD_CTL_PE_SET(1) | IOC_PAD_PAD_CTL_PS_SET(1); /* Internally pull up to avoid suspension */
-    HPM_IOC->PAD[IOC_PAD_PB25].FUNC_CTL = IOC_PB25_FUNC_CTL_ESC0_CTR_5; /* NMII_LINK1 function */
-    HPM_IOC->PAD[IOC_PAD_PB25].PAD_CTL = IOC_PAD_PAD_CTL_PE_SET(1) | IOC_PAD_PAD_CTL_PS_SET(1); /* Internally pull up to avoid suspension */
-    HPM_IOC->PAD[IOC_PAD_PE02].FUNC_CTL = IOC_PE02_FUNC_CTL_ESC0_CTR_6; /* NMII_LINK2 function */
-    HPM_IOC->PAD[IOC_PAD_PE02].PAD_CTL = IOC_PAD_PAD_CTL_PE_SET(1) | IOC_PAD_PAD_CTL_PS_SET(1); /* Internally pull up to avoid suspension */
+    HPM_IOC->PAD[IOC_PAD_PB26].FUNC_CTL = IOC_PB26_FUNC_CTL_GPIO_B_26;  /* GPIO to reset PHY */
+    HPM_IOC->PAD[IOC_PAD_PB27].FUNC_CTL = IOC_PB27_FUNC_CTL_ESC0_CTR_7; /* NMII_LINK0 function */
+    HPM_IOC->PAD[IOC_PAD_PB27].PAD_CTL = IOC_PAD_PAD_CTL_PE_SET(1) | IOC_PAD_PAD_CTL_PS_SET(1); /* Internally pull up to avoid suspension */
+    HPM_IOC->PAD[IOC_PAD_PB28].FUNC_CTL = IOC_PB28_FUNC_CTL_ESC0_CTR_8; /* NMII_LINK1 function */
+    HPM_IOC->PAD[IOC_PAD_PB28].PAD_CTL = IOC_PAD_PAD_CTL_PE_SET(1) | IOC_PAD_PAD_CTL_PS_SET(1); /* Internally pull up to avoid suspension */
+    //HPM_IOC->PAD[IOC_PAD_PE02].FUNC_CTL = IOC_PE02_FUNC_CTL_ESC0_CTR_6; /* NMII_LINK2 function */
+    //HPM_IOC->PAD[IOC_PAD_PE02].PAD_CTL = IOC_PAD_PAD_CTL_PE_SET(1) | IOC_PAD_PAD_CTL_PS_SET(1); /* Internally pull up to avoid suspension */
 
     /* ESC port0 */
     HPM_IOC->PAD[IOC_PAD_PA24].FUNC_CTL = IOC_PA24_FUNC_CTL_ESC0_P0_TXCK;
