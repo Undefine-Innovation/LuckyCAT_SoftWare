@@ -565,7 +565,11 @@ hpm_stat_t board_init_enet_pins(ENET_Type *ptr)
     init_enet_pins(ptr);
 
     if (ptr == HPM_ENET0) {
-        gpio_set_pin_output_with_initial(BOARD_ENET_RGMII_RST_GPIO, BOARD_ENET_RGMII_RST_GPIO_INDEX, BOARD_ENET_RGMII_RST_GPIO_PIN, 0);
+    #if defined(MII) && MII
+    gpio_set_pin_output_with_initial(BOARD_ENET_MII_RST_GPIO, BOARD_ENET_MII_RST_GPIO_INDEX, BOARD_ENET_MII_RST_GPIO_PIN, 0);
+    #elif defined(RMII) && RMII
+    gpio_set_pin_output_with_initial(BOARD_ENET_RMII_RST_GPIO, BOARD_ENET_RMII_RST_GPIO_INDEX, BOARD_ENET_RMII_RST_GPIO_PIN, 0);
+    #endif
     }  else {
         return status_invalid_argument;
     }
@@ -576,9 +580,15 @@ hpm_stat_t board_init_enet_pins(ENET_Type *ptr)
 hpm_stat_t board_reset_enet_phy(ENET_Type *ptr)
 {
     if (ptr == HPM_ENET0) {
-        gpio_write_pin(BOARD_ENET_RGMII_RST_GPIO, BOARD_ENET_RGMII_RST_GPIO_INDEX, BOARD_ENET_RGMII_RST_GPIO_PIN, 0);
-        board_delay_ms(1);
-        gpio_write_pin(BOARD_ENET_RGMII_RST_GPIO, BOARD_ENET_RGMII_RST_GPIO_INDEX, BOARD_ENET_RGMII_RST_GPIO_PIN, 1);
+    #if defined(MII) && MII
+    gpio_write_pin(BOARD_ENET_MII_RST_GPIO, BOARD_ENET_MII_RST_GPIO_INDEX, BOARD_ENET_MII_RST_GPIO_PIN, 0);
+    board_delay_ms(1);
+    gpio_write_pin(BOARD_ENET_MII_RST_GPIO, BOARD_ENET_MII_RST_GPIO_INDEX, BOARD_ENET_MII_RST_GPIO_PIN, 1);
+    #elif defined(RMII) && RMII
+    gpio_write_pin(BOARD_ENET_RMII_RST_GPIO, BOARD_ENET_RMII_RST_GPIO_INDEX, BOARD_ENET_RMII_RST_GPIO_PIN, 0);
+    board_delay_ms(1);
+    gpio_write_pin(BOARD_ENET_RMII_RST_GPIO, BOARD_ENET_RMII_RST_GPIO_INDEX, BOARD_ENET_RMII_RST_GPIO_PIN, 1);
+    #endif
     } else {
         return status_invalid_argument;
     }
