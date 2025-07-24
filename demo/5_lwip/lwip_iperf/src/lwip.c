@@ -273,14 +273,13 @@ int main(void)
 {
     /* Initialize Clocks */
     board_init();
-
+  
     /* Initialize GPIOs */
     board_init_enet_pins(ENET);
 
     clock_add_to_group(clock_esc0, 0);
     HPM_ESC->GPR_CFG0 |= ESC_GPR_CFG0_CLK100_EN_MASK;
     HPM_ESC->PHY_CFG1 |= ESC_PHY_CFG1_REFCK_25M_OE_MASK;   /*!< enable PHY 25M refck */
-    board_delay_ms(500);
     /* Reset an enet PHY */
     board_reset_enet_phy(ENET);
 
@@ -297,7 +296,7 @@ int main(void)
     #elif defined(MII) && MII
     board_init_enet_rmii_reference_clock(ENET, BOARD_ENET_MII_INT_REF_CLK);
     printf("Reference Clock: %s\n", BOARD_ENET_MII_INT_REF_CLK ? "Internal Clock" : "External Clock");
-    board_delay_ms(500);
+    board_delay_ms(150);
     #endif
 
     /* Initialize MAC and DMA */
