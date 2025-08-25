@@ -12,12 +12,9 @@ set(CONFIG_LWIP_IPERF 1)
 
 set(CONFIG_ENET_PHY 1)
 set(APP_USE_ENET_PORT_COUNT 1)
-#set(APP_USE_ENET_ITF_RGMII 1)
-#set(APP_USE_ENET_ITF_RMII 1)
-#set(APP_USE_ENET_PHY_DP83867 1)
-#set(APP_USE_ENET_PHY_RTL8211 1)
-#set(APP_USE_ENET_PHY_DP83848 1)
-#set(APP_USE_ENET_PHY_RTL8201 1)
+set(APP_USE_ENET_ITF_MII 1)
+# set(APP_USE_ENET_ITF_RMII 1)
+
 
 if(NOT DEFINED APP_USE_ENET_PORT_COUNT)
     message(FATAL_ERROR "APP_USE_ENET_PORT_COUNT is undefined!")
@@ -27,18 +24,26 @@ if(NOT APP_USE_ENET_PORT_COUNT EQUAL 1)
     message(FATAL_ERROR "This sample supports only one Ethernet port!")
 endif()
 
-if (APP_USE_ENET_ITF_RGMII AND APP_USE_ENET_ITF_RMII)
+if (NOT DEFINED APP_USE_ENET_ITF_MII AND NOT DEFINED APP_USE_ENET_ITF_RMII)
     message(FATAL_ERROR "This sample doesn't support more than one Ethernet phy!")
 endif()
 
 
-
 find_package(hpm-sdk REQUIRED HINTS $ENV{HPM_SDK_BASE})
+
+if (APP_USE_ENET_ITF_RMII EQUAL 1)
+    sdk_compile_definitions(-DRMII=1)
+endif()
+
+if (APP_USE_ENET_ITF_MII EQUAL 1)
+    sdk_compile_definitions(-DMII=1)
+endif()
 
 sdk_compile_definitions(-D__DISABLE_AUTO_NEGO=0)
 sdk_compile_definitions(-D__ENABLE_ENET_RECEIVE_INTERRUPT=0)
-sdk_compile_definitions(-DLWIP_DHCP=0)
+sdk_compile_definitions(-DLWIP_DHCP=1)
 sdk_compile_definitions(-DUSE_LWIPOPTS_APP_H=1)
+sdk_compile_definitions(-DREMOTE_IP_CONFIG=192.168.1.132)
 
 project(lwip_iperf_example)
 sdk_inc(../ports/baremetal/single)

@@ -18,6 +18,7 @@
 #include "lwip/apps/lwiperf.h"
 #include "lwip/dhcp.h"
 #include "lwip/prot/dhcp.h"
+#include "hpm_esc_drv.h"
 
 #ifndef IPERF_UDP_CLIENT_RATE
 #if defined(RGMII) && RGMII
@@ -126,17 +127,36 @@ hpm_stat_t enet_init(ENET_Type *ptr)
         #endif
     #else
         #if defined(__USE_DP83848) && __USE_DP83848
-        dp83848_reset(ptr);
-        dp83848_basic_mode_default_config(ptr, &phy_config);
-        if (dp83848_basic_mode_init(ptr, &phy_config) == true) {
+            dp83848_reset(ptr);
+            dp83848_basic_mode_default_config(ptr, &phy_config);
+            if (dp83848_basic_mode_init(ptr, &phy_config) == true) {
+        #elif defined(__USE_RTL8201) && __USE_RTL8201
+            rtl8201_reset(ptr);
+            rtl8201_basic_mode_default_config(ptr, &phy_config);
+            if (rtl8201_basic_mode_init(ptr, &phy_config) == true) {
         #else
-        //rtl8201_reset(ptr);
-        //rtl8201_basic_mode_default_config(ptr, &phy_config);
-        //if (rtl8201_basic_mode_init(ptr, &phy_config) == true) {
-
-        jl1111_reset(ptr);
-        jl1111_basic_mode_default_config(ptr, &phy_config);
-        if (jl1111_basic_mode_init(ptr, &phy_config) == true) {
+        #if defined(MII) && MII
+            jl1111_reset(ptr);
+            jl1111_basic_mode_default_config(ptr, &phy_config);
+            if (jl1111_basic_mode_init(ptr, &phy_config) == true) {
+        #elif defined(RMII) && RMII
+            jl1111_reset(ptr);
+            jl1111_basic_mode_default_config(ptr, &phy_config);
+            if (jl1111_basic_mode_init(ptr, &phy_config) == true) {
+                uint16_t pagesel;
+                enet_write_phy(ptr, JL1111_ADDR, JL1111_PAGESEL, JL1111_PAGESEL_PAGE_SELECTION_SET(7));
+                pagesel = enet_read_phy(ptr, JL1111_ADDR, JL1111_PAGESEL);
+                printf("pagesel: %x\n", pagesel);
+                uint16_t rmsr = enet_read_phy(ptr, JL1111_ADDR, JL1111_RMSR_P7);
+                printf("0 rmsr: %x\n", rmsr);
+                rmsr |= JL1111_RMSR_P7_RMII_RXD_BAD_SSD_ENABLE_MASK | JL1111_RMSR_P7_MII_RMII_MODE_SELECTION_MASK | JL1111_RMSR_P7_RMII_CLOCK_DIRECTION_MASK;
+                enet_write_phy(ptr, JL1111_ADDR, JL1111_RMSR_P7, rmsr);
+                rmsr = enet_read_phy(ptr, JL1111_ADDR, JL1111_RMSR_P7);
+                printf("0 rmsr: %x\n", rmsr);
+                enet_write_phy(ptr, JL1111_ADDR, JL1111_PAGESEL, JL1111_PAGESEL_PAGE_SELECTION_SET(0));
+                pagesel = enet_read_phy(ptr, JL1111_ADDR, JL1111_PAGESEL);
+                printf("pagesel: %x\n", pagesel);
+        #endif
         #endif
     #endif
             printf("Enet phy init passed !\n");
@@ -273,13 +293,12 @@ int main(void)
 {
     /* Initialize Clocks */
     board_init();
-  
+
     /* Initialize GPIOs */
     board_init_enet_pins(ENET);
-
     clock_add_to_group(clock_esc0, 0);
-    HPM_ESC->GPR_CFG0 |= ESC_GPR_CFG0_CLK100_EN_MASK;
-    HPM_ESC->PHY_CFG1 |= ESC_PHY_CFG1_REFCK_25M_OE_MASK;   /*!< enable PHY 25M refck */
+    esc_core_enable_clock(HPM_ESC, true);
+    esc_phy_enable_clock(HPM_ESC, true);
     /* Reset an enet PHY */
     board_reset_enet_phy(ENET);
 
@@ -296,27 +315,24 @@ int main(void)
     #elif defined(MII) && MII
     board_init_enet_rmii_reference_clock(ENET, BOARD_ENET_MII_INT_REF_CLK);
     printf("Reference Clock: %s\n", BOARD_ENET_MII_INT_REF_CLK ? "Internal Clock" : "External Clock");
-    board_delay_ms(150);
     #endif
 
     /* Initialize MAC and DMA */
-    if (enet_init(ENET) == 0) {
-        /* Initialize the Lwip stack */
-        lwip_init();
-        board_timer_create(LWIP_APP_TIMER_INTERVAL, sys_timer_callback);
-        netif_config(&gnetif);
-
-        /* Start services */
-        enet_services(&gnetif);
-
-        while (1) {
-            enet_common_handler(&gnetif);
-            iperf();
-        }
-    } else {
-        printf("Enet initialization fails !!!\n");
-        while (1);
+    while (enet_init(ENET) != status_success) {
+        printf("Enet initialization fails, please check the phy setting !!!\n");
+        board_delay_ms(100);
     }
+    /* Initialize the Lwip stack */
+    lwip_init();
+    board_timer_create(LWIP_APP_TIMER_INTERVAL, sys_timer_callback);
+    netif_config(&gnetif);
 
+    /* Start services */
+    enet_services(&gnetif);
+
+    while (1) {
+        enet_common_handler(&gnetif);
+        iperf();
+    }
     return 0;
 }

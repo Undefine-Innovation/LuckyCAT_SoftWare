@@ -184,8 +184,9 @@ void enet_self_adaptive_port_speed(void)
 #else
     #if defined(__USE_DP83848) && __USE_DP83848
         dp83848_get_phy_status(ENET, &status);
+    #elif defined(__USE_RTL8201) && __USE_RTL8201
+        rtl8201_get_phy_status(ENET, &status);
     #else
-        //rtl8201_get_phy_status(ENET, &status);
         jl1111_get_phy_status(ENET, &status);
     #endif
 #endif

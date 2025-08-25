@@ -284,6 +284,12 @@
 #define BOARD_ENET_MII_RST_GPIO_PIN    (28U)
 #define BOARD_ENET_MII                 HPM_ENET0
 #define BOARD_ENET_MII_INT_REF_CLK     (0U)
+
+#define BOARD_ENET_RMII_RST_GPIO        HPM_GPIO0
+#define BOARD_ENET_RMII_RST_GPIO_INDEX  GPIO_DO_GPIOB
+#define BOARD_ENET_RMII_RST_GPIO_PIN    (28U)
+#define BOARD_ENET_RMII                 HPM_ENET0
+#define BOARD_ENET_RMII_INT_REF_CLK     (1U)
 /* MOTOR */
 #define BOARD_MOTOR_CLK_NAME clock_mot0
 

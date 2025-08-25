@@ -335,6 +335,24 @@ void board_led_write(uint8_t state)
 
 void board_init_pmp(void)
 {
+    uint32_t length;
+    pmp_entry_t pmp_entry[16] = {0};
+    uint8_t index = 0;
+    /* Init noncachable memory */
+    const uint32_t start_addr = 0x01220000;
+    const uint32_t end_addr = 0x01220000 + (128 * 1024);
+    length = end_addr - start_addr;
+    if (length > 0) {
+        /* Ensure the address and the length are power of 2 aligned */
+        assert((length & (length - 1U)) == 0U);
+        assert((start_addr & (length - 1U)) == 0U);
+        pmp_entry[index].pmp_addr = PMP_NAPOT_ADDR(start_addr, length);
+        pmp_entry[index].pmp_cfg.val = PMP_CFG(READ_EN, WRITE_EN, EXECUTE_EN, ADDR_MATCH_NAPOT, REG_UNLOCK);
+        pmp_entry[index].pma_addr = PMA_NAPOT_ADDR(start_addr, length);
+        pmp_entry[index].pma_cfg.val = PMA_CFG(ADDR_MATCH_NAPOT, MEM_TYPE_MEM_NON_CACHE_BUF, AMO_EN);
+        index++;
+    }
+    pmp_config(&pmp_entry[0], index);
 }
 
 void board_init_clock(void)
