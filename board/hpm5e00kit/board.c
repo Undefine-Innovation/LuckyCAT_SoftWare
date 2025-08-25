@@ -336,6 +336,24 @@ void board_led_write(uint8_t state)
 
 void board_init_pmp(void)
 {
+    uint32_t length;
+    pmp_entry_t pmp_entry[16] = {0};
+    uint8_t index = 0;
+    /* Init noncachable memory */
+    const uint32_t start_addr = 0x01220000;
+    const uint32_t end_addr = 0x01220000 + (128 * 1024);
+    length = end_addr - start_addr;
+    if (length > 0) {
+        /* Ensure the address and the length are power of 2 aligned */
+        assert((length & (length - 1U)) == 0U);
+        assert((start_addr & (length - 1U)) == 0U);
+        pmp_entry[index].pmp_addr = PMP_NAPOT_ADDR(start_addr, length);
+        pmp_entry[index].pmp_cfg.val = PMP_CFG(READ_EN, WRITE_EN, EXECUTE_EN, ADDR_MATCH_NAPOT, REG_UNLOCK);
+        pmp_entry[index].pma_addr = PMA_NAPOT_ADDR(start_addr, length);
+        pmp_entry[index].pma_cfg.val = PMA_CFG(ADDR_MATCH_NAPOT, MEM_TYPE_MEM_NON_CACHE_BUF, AMO_EN);
+        index++;
+    }
+    pmp_config(&pmp_entry[0], index);
 }
 
 void board_init_clock(void)
@@ -540,10 +558,12 @@ hpm_stat_t board_reset_enet_phy(ENET_Type *ptr)
     gpio_write_pin(BOARD_ENET_MII_RST_GPIO, BOARD_ENET_MII_RST_GPIO_INDEX, BOARD_ENET_MII_RST_GPIO_PIN, 0);
     board_delay_ms(1);
     gpio_write_pin(BOARD_ENET_MII_RST_GPIO, BOARD_ENET_MII_RST_GPIO_INDEX, BOARD_ENET_MII_RST_GPIO_PIN, 1);
+    board_delay_ms(1500);
     #elif defined(RMII) && RMII
     gpio_write_pin(BOARD_ENET_RMII_RST_GPIO, BOARD_ENET_RMII_RST_GPIO_INDEX, BOARD_ENET_RMII_RST_GPIO_PIN, 0);
     board_delay_ms(1);
     gpio_write_pin(BOARD_ENET_RMII_RST_GPIO, BOARD_ENET_RMII_RST_GPIO_INDEX, BOARD_ENET_RMII_RST_GPIO_PIN, 1);
+    board_delay_ms(5);
     #endif
     } else {
         return status_invalid_argument;
@@ -589,15 +609,16 @@ void board_init_enet_pps_pins(ENET_Type *ptr)
 hpm_stat_t board_init_enet_rmii_reference_clock(ENET_Type *ptr, bool internal)
 {
     /* Configure Enet clock to output reference clock */
+
     if (ptr == HPM_ENET0) {
         clock_add_to_group(clock_eth0, 0);
         if (internal) {
-            /* set pll output frequency at 1GHz */
-            if (pllctlv2_init_pll_with_freq(HPM_PLLCTLV2, pllctlv2_pll2, 1000000000UL) == status_success) {
-                /* set pll2_clk1 output frequency at 250MHz from PLL2 divided by 4 (1 + 15 / 5) */
-                pllctlv2_set_postdiv(HPM_PLLCTLV2, pllctlv2_pll2, pllctlv2_clk1, pllctlv2_div_4p0);
+            /* set pll output frequency at 0.5GHz */
+            if (pllctlv2_init_pll_with_freq(HPM_PLLCTLV2, pllctlv2_pll2, 500000000UL) == status_success) {
+                /* set pll2_clk1 output frequency at 250MHz from PLL2 divided by 2 */
+                pllctlv2_set_postdiv(HPM_PLLCTLV2, pllctlv2_pll2, pllctlv2_clk1, pllctlv2_div_2p0);
                 /* set eth clock frequency at 50MHz for enet0 */
-                /* clock_set_source_divider(clock_eth0, clk_src_pll2_clk1, 5); */
+                clock_set_source_divider(clock_eth0, clk_src_pll2_clk1, 5);
             } else {
                 return status_fail;
             }
